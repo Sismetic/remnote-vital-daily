@@ -1,0 +1,23 @@
+{
+  "manifestVersion": 1,
+  "id": "proteus-priority-tags",
+  "name": "Priority Tags",
+  "author": "Proteus",
+  "repoUrl": "https://github.com/Sismetic/remnote-vital-daily",
+  "version": {
+    "major": 1,
+    "minor": 1,
+    "patch": 0
+  },
+  "theme": [],
+  "enableOnMobile": true,
+  "unlisted": true,
+  "description": "Applies priority tags and opens an automatic 50-card vital queue across all books.",
+  "requestNative": false,
+  "requiredScopes": [
+    {
+      "type": "All",
+      "level": "ReadCreateModify"
+    }
+  ]
+}

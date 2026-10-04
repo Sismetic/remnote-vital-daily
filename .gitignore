@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.zip
+.DS_Store
+.env*
+work/
+outputs/
+data/
+exports/
+*.log
