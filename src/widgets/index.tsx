@@ -20,6 +20,11 @@ const INITIAL_BACKFILL_KEY = 'priority-tags.initial-backfill-v5';
 const EVENT_DEBOUNCE_MS = 700;
 const SCAN_CONCURRENCY = 10;
 const LEGACY_TAG_NAMES = ['Importante', 'Detalle'] as const;
+// These locations were added after the pinned SDK version. The host accepts
+// their stable string identifiers; keeping the older SDK avoids changing the
+// already-working desktop runtime just to expose the mobile launcher.
+const DECK_PAGE_LOCATION = 'DeckPage' as WidgetLocation;
+const LEARNING_PROGRESS_LOCATION = 'LearningProgressPage' as WidgetLocation;
 
 type TagMap = Record<PriorityKey, Rem>;
 
@@ -308,6 +313,8 @@ async function onActivate(plugin: ReactRNPlugin) {
       plugin.app.unregisterWidget('vital_daily_session', WidgetLocation.Pane),
       plugin.app.unregisterWidget('vital_daily_entry', WidgetLocation.Pane),
       plugin.app.unregisterWidget('vital_daily_floating', WidgetLocation.FloatingWidget),
+      plugin.app.unregisterWidget('mobile_launcher', DECK_PAGE_LOCATION),
+      plugin.app.unregisterWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION),
     ].map((operation) => operation.catch(() => undefined)),
   );
 
@@ -318,6 +325,12 @@ async function onActivate(plugin: ReactRNPlugin) {
   });
   await plugin.app.registerWidget('important_daily_popup', WidgetLocation.Popup, {
     dimensions: popupDimensions(window.screen.width, window.screen.height, navigator.userAgent),
+  });
+  await plugin.app.registerWidget('mobile_launcher', DECK_PAGE_LOCATION, {
+    dimensions: { width: '100%', height: 'auto' },
+  });
+  await plugin.app.registerWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION, {
+    dimensions: { width: '100%', height: 'auto' },
   });
 
   await plugin.app.registerSidebarButton({

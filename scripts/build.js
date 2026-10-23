@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const esbuild = require('esbuild');
 const root = path.resolve(__dirname, '..');
 const dist = path.join(root, 'dist');
-const widgets = ['index', 'vital_daily_popup', 'important_daily_popup'];
+const widgets = ['index', 'vital_daily_popup', 'important_daily_popup', 'mobile_launcher'];
 
 async function build() {
   fs.mkdirSync(dist, { recursive: true });

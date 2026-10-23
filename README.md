@@ -20,7 +20,7 @@ Revisa las tarjetas existentes al arrancar, responde a cambios del editor y comp
 
 ## Computadora y móvil
 
-La versión 1.2.1 ofrece las dos prácticas en computadora y móvil. Cada popup usa el ancho del teléfono, controles táctiles de al menos 44 px y una zona desplazable para preguntas y respuestas largas. En escritorio conserva un tamaño de 1000 × 720.
+La versión 1.2.2 ofrece las dos prácticas en computadora y móvil. En el teléfono, abre la pestaña **Flashcards** para ver los botones **Practicar VITAL** y **Practicar IMPORTANTE**. Cada popup usa el ancho del teléfono, controles táctiles de al menos 44 px y una zona desplazable para preguntas y respuestas largas. En escritorio conserva un tamaño de 1000 × 720.
 
 En móvil, el plugin sólo lee los tags existentes y abre las colas de práctica. No ejecuta el etiquetado automático, no crea tags y no modifica las tarjetas. En computadora conserva el etiquetado automático ya existente.
 
