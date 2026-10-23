@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const root = path.resolve(__dirname, '..');
 const files = ['index.html', 'index-sandbox.js', 'index.js',
   'vital_daily_popup-sandbox.js', 'vital_daily_popup.js',
+  'important_daily_popup-sandbox.js', 'important_daily_popup.js',
   'manifest.json', 'App.css', 'snippet.css', 'README.md'];
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'dist/manifest.json'), 'utf8'));
 if (!/^https:\/\/github\.com\/[\w-]+\/[\w.-]+$/.test(manifest.repoUrl)) {

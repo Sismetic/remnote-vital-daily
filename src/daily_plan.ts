@@ -1,5 +1,5 @@
 /** Pure selection rules; no RemNote writes or scheduling changes. */
-export const DAILY_LIMIT = 50;
+export const DAILY_LIMIT = 35;
 export interface PlanCard {
   id: string; bookId: string; bookName: string; createdAt: number;
   dueAt?: number; isNew: boolean; practicedToday: boolean;

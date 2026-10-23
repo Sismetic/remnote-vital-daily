@@ -13,8 +13,8 @@ import {
   priorityFromText,
   richTextToPlainText,
 } from '../priority_tags';
-import { openVitalDailyStudy } from './vital_daily';
-import { popupDimensions } from '../mobile_layout';
+import { openDailyStudy } from './vital_daily';
+import { popupDimensions, shouldReconcilePriorityTags } from '../mobile_layout';
 
 const INITIAL_BACKFILL_KEY = 'priority-tags.initial-backfill-v5';
 const EVENT_DEBOUNCE_MS = 700;
@@ -293,6 +293,10 @@ async function scanAllCards(plugin: ReactRNPlugin, announce = true): Promise<Sca
 }
 
 async function onActivate(plugin: ReactRNPlugin) {
+  const reconcilePriorityTags = shouldReconcilePriorityTags(
+    window.screen.width,
+    navigator.userAgent,
+  );
   // Index is a hidden lifecycle iframe. The visible daily queue belongs only
   // in a popup, never in this widget or a skinny sidebar.
   await Promise.all(
@@ -300,6 +304,7 @@ async function onActivate(plugin: ReactRNPlugin) {
       plugin.app.unregisterWidget('vital_daily_entry', WidgetLocation.RightSidebar),
       plugin.app.unregisterWidget('vital_daily_entry', WidgetLocation.Popup),
       plugin.app.unregisterWidget('vital_daily_popup', WidgetLocation.Popup),
+      plugin.app.unregisterWidget('important_daily_popup', WidgetLocation.Popup),
       plugin.app.unregisterWidget('vital_daily_session', WidgetLocation.Pane),
       plugin.app.unregisterWidget('vital_daily_entry', WidgetLocation.Pane),
       plugin.app.unregisterWidget('vital_daily_floating', WidgetLocation.FloatingWidget),
@@ -311,25 +316,49 @@ async function onActivate(plugin: ReactRNPlugin) {
   await plugin.app.registerWidget('vital_daily_popup', WidgetLocation.Popup, {
     dimensions: popupDimensions(window.screen.width, window.screen.height, navigator.userAgent),
   });
+  await plugin.app.registerWidget('important_daily_popup', WidgetLocation.Popup, {
+    dimensions: popupDimensions(window.screen.width, window.screen.height, navigator.userAgent),
+  });
 
   await plugin.app.registerSidebarButton({
     id: 'priority-tags.vital-daily',
-    name: 'Practicar Vital · 50',
-    description: 'Abrir la sesión diaria de hasta 50 tarjetas vital de todos tus libros.',
-    keywords: 'vital estudiar tarjetas flashcards diario 50',
+    name: 'Práctica Diaria de Vital',
+    description: 'Abrir la sesión diaria de hasta 35 tarjetas vital de todos tus libros.',
+    keywords: 'vital estudiar tarjetas flashcards diario 35',
     icon: '🔥',
     action: async () => {
-      await openVitalDailyStudy(plugin);
+      await openDailyStudy(plugin, 'vital');
+    },
+  });
+
+  await plugin.app.registerSidebarButton({
+    id: 'priority-tags.important-daily',
+    name: 'Práctica Diaria de Importante',
+    description: 'Abrir la sesión diaria de hasta 35 tarjetas importantes de todos tus libros.',
+    keywords: 'important importante estudiar tarjetas flashcards diario 35',
+    icon: '⭐',
+    action: async () => {
+      await openDailyStudy(plugin, 'important');
     },
   });
 
   await plugin.app.registerCommand({
     id: 'priority-tags.practice-vital',
-    name: 'Practicar Vital · Hoy',
+    name: 'Práctica Diaria de Vital',
     description: 'Abrir la misma práctica diaria que el botón de la barra lateral.',
-    keywords: 'vital diario practicar estudiar 50',
-    action: async () => { await openVitalDailyStudy(plugin); },
+    keywords: 'vital diario practicar estudiar 35',
+    action: async () => { await openDailyStudy(plugin, 'vital'); },
   });
+
+  await plugin.app.registerCommand({
+    id: 'priority-tags.practice-important',
+    name: 'Práctica Diaria de Importante',
+    description: 'Abrir la práctica diaria de tarjetas importantes.',
+    keywords: 'important importante diario practicar estudiar 35',
+    action: async () => { await openDailyStudy(plugin, 'important'); },
+  });
+
+  if (!reconcilePriorityTags) return;
 
   await plugin.app.registerCommand({
     id: 'priority-tags.scan-all',

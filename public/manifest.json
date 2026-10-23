@@ -6,13 +6,13 @@
   "repoUrl": "https://github.com/Sismetic/remnote-vital-daily",
   "version": {
     "major": 1,
-    "minor": 1,
-    "patch": 0
+    "minor": 2,
+    "patch": 1
   },
   "theme": [],
   "enableOnMobile": true,
   "unlisted": true,
-  "description": "Applies priority tags and opens an automatic 50-card vital queue across all books.",
+  "description": "Applies priority tags and opens separate 35-card daily queues for vital and important cards.",
   "requestNative": false,
   "requiredScopes": [
     {

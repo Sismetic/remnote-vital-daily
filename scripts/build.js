@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const esbuild = require('esbuild');
 const root = path.resolve(__dirname, '..');
 const dist = path.join(root, 'dist');
-const widgets = ['index', 'vital_daily_popup'];
+const widgets = ['index', 'vital_daily_popup', 'important_daily_popup'];
 
 async function build() {
   fs.mkdirSync(dist, { recursive: true });
@@ -33,9 +33,9 @@ if (allowed.includes(widgetName)) {
   const script = document.createElement('script');
   script.type = 'module';
   script.src = widgetName + '-sandbox.js?v=${version}';
-  script.onerror = () => { document.body.textContent = 'No pude cargar Vital. Comprueba tu conexión y el origen de instalación de Priority Tags.'; };
+  script.onerror = () => { document.body.textContent = 'No pude cargar la práctica. Comprueba tu conexión y el origen de instalación de Priority Tags.'; };
   document.body.appendChild(script);
-} else { document.body.textContent = 'Priority Tags · Vital diario'; }
+} else { document.body.textContent = 'Priority Tags · Práctica diaria'; }
 </script></html>`);
   fs.copyFileSync(path.join(root, 'public/manifest.json'), path.join(dist, 'manifest.json'));
   fs.copyFileSync(path.join(root, 'README.md'), path.join(dist, 'README.md'));

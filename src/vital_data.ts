@@ -2,7 +2,8 @@ import type { Card, ReactRNPlugin, Rem } from '@remnote/plugin-sdk';
 import { richTextToPlainText } from './priority_tags';
 import { localDay, mergeSavedDays, milliseconds, selectDay, type PlanCard, type SavedDay } from './daily_plan';
 export const DAY_STORAGE_KEY = 'priority-tags.vital-day-v1';
-const SYNCED_DAY_PREFIX = 'priority-tags.vital-day-v2';
+
+export type DailyPriority = 'vital' | 'important';
 
 export async function mapConcurrent<T, R>(items: T[], work: (item: T) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
@@ -18,15 +19,15 @@ export function practicedOnDay(card: Card, day: string): boolean {
     return time !== undefined && localDay(time) === day;
   });
 }
-async function loadVitalCards(plugin: ReactRNPlugin) {
-  const top = await plugin.rem.findByName(['vital'], null);
-  const matches = await plugin.search.search(['vital'], undefined, { numResults: 100 });
+async function loadPriorityCards(plugin: ReactRNPlugin, priority: DailyPriority) {
+  const top = await plugin.rem.findByName([priority], null);
+  const matches = await plugin.search.search([priority], undefined, { numResults: 100 });
   const tags = [...new Map((top ? [top, ...matches] : matches).map((rem) => [rem._id, rem])).values()]
-    .filter((rem) => richTextToPlainText(rem.text).trim().toLocaleLowerCase() === 'vital');
+    .filter((rem) => richTextToPlainText(rem.text).trim().toLocaleLowerCase() === priority);
   // Tag IDs are stable and unique to a knowledge base. Synced storage is at
   // user level, so using a bare key would mix quotas from unrelated KBs.
   const namespace = tags.find((tag) => tag._id === top?._id)?._id ?? tags.map((tag) => tag._id).sort()[0];
-  if (!namespace) throw new Error('No encontré el tag vital. Espera a que termine la sincronización y reintenta.');
+  if (!namespace) throw new Error(`No encontré el tag ${priority}. Espera a que termine la sincronización y reintenta.`);
   const rems = [...new Map((await Promise.all(tags.map((tag) => tag.taggedRem()))).flat()
     .map((rem) => [rem._id, rem])).values()];
   const cards = (await mapConcurrent(rems, async (rem) => {
@@ -34,7 +35,9 @@ async function loadVitalCards(plugin: ReactRNPlugin) {
     return rem.getCards();
   })).flat();
   return { cards: [...new Map(cards.map((card) => [card._id, card])).values()],
-    storageKey: `${SYNCED_DAY_PREFIX}:${namespace}` };
+    // Keep the existing VITAL key stable; IMPORTANT receives an independent
+    // namespace and therefore an independent daily quota on every device.
+    storageKey: `priority-tags.${priority}-day-v2:${namespace}` };
 }
 async function readDayState(plugin: ReactRNPlugin, key: string, day: string) {
   const [synced, cached] = await Promise.all([
@@ -71,9 +74,9 @@ function bookResolver(plugin: ReactRNPlugin) {
   };
   return resolve;
 }
-export async function buildDailyPlan(plugin: ReactRNPlugin) {
+export async function buildDailyPlan(plugin: ReactRNPlugin, priority: DailyPriority = 'vital') {
   const now = Date.now(), day = localDay(now);
-  const { cards, storageKey } = await loadVitalCards(plugin);
+  const { cards, storageKey } = await loadPriorityCards(plugin, priority);
   const resolve = bookResolver(plugin);
   const prepared: PlanCard[] = await mapConcurrent(cards, async (card) => ({
     id: card._id, ...(await resolve(card.remId)),
@@ -81,7 +84,7 @@ export async function buildDailyPlan(plugin: ReactRNPlugin) {
     isNew: !card.repetitionHistory?.length, practicedToday: practicedOnDay(card, day),
   }));
   let previous = await readDayState(plugin, storageKey, day);
-  if (!previous) {
+  if (!previous && priority === 'vital') {
     // One-time migration. Only import IDs in this KB's vital pool: the old
     // unscoped key may have been written in a different knowledge base.
     const legacy = mergeSavedDays(day, await plugin.storage.getLocal<SavedDay>(DAY_STORAGE_KEY));
@@ -96,7 +99,7 @@ export async function buildDailyPlan(plugin: ReactRNPlugin) {
     id, name: planned.find((card) => card.bookId === id)!.bookName,
     count: planned.filter((card) => card.bookId === id).length,
   })).sort((a, b) => a.name.localeCompare(b.name));
-  return { ...result, storageKey, books, totalVitalCards: cards.length,
+  return { ...result, priority, storageKey, books, totalCards: cards.length,
     newCount: planned.filter((card) => card.isNew).length,
     dueCount: planned.filter((card) => !card.isNew).length,
     trackedIds: [...new Set([...result.cardIds, ...result.state.practicedIds])],
