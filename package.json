@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "remnote-vital-daily",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "license": "MIT",
   "scripts": {
     "check-types": "tsc",
@@ -10,7 +10,7 @@
     "package": "npm run build && node scripts/package.js"
   },
   "dependencies": {
-    "@remnote/plugin-sdk": "0.0.14",
+    "@remnote/plugin-sdk": "0.0.46",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },

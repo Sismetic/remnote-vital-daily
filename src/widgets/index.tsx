@@ -2,8 +2,8 @@ import {
   AppEvents,
   WidgetLocation,
   renderWidget,
+  type PluginRem as Rem,
   type ReactRNPlugin,
-  type Rem,
   usePlugin,
 } from '@remnote/plugin-sdk';
 import React, { useEffect } from 'react';
@@ -20,11 +20,8 @@ const INITIAL_BACKFILL_KEY = 'priority-tags.initial-backfill-v5';
 const EVENT_DEBOUNCE_MS = 700;
 const SCAN_CONCURRENCY = 10;
 const LEGACY_TAG_NAMES = ['Importante', 'Detalle'] as const;
-// These locations were added after the pinned SDK version. The host accepts
-// their stable string identifiers; keeping the older SDK avoids changing the
-// already-working desktop runtime just to expose the mobile launcher.
-const DECK_PAGE_LOCATION = 'DeckPage' as WidgetLocation;
-const LEARNING_PROGRESS_LOCATION = 'LearningProgressPage' as WidgetLocation;
+const DECK_PAGE_LOCATION = WidgetLocation.DeckPage;
+const LEARNING_PROGRESS_LOCATION = WidgetLocation.LearningProgressPage;
 
 type TagMap = Record<PriorityKey, Rem>;
 

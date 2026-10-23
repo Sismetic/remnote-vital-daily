@@ -1,4 +1,4 @@
-import type { Card, ReactRNPlugin, Rem } from '@remnote/plugin-sdk';
+import type { Card, PluginRem as Rem, ReactRNPlugin } from '@remnote/plugin-sdk';
 import { richTextToPlainText } from './priority_tags';
 import { localDay, mergeSavedDays, milliseconds, selectDay, type PlanCard, type SavedDay } from './daily_plan';
 export const DAY_STORAGE_KEY = 'priority-tags.vital-day-v1';
