@@ -22,6 +22,7 @@ const SCAN_CONCURRENCY = 10;
 const LEGACY_TAG_NAMES = ['Importante', 'Detalle'] as const;
 const DECK_PAGE_LOCATION = WidgetLocation.DeckPage;
 const LEARNING_PROGRESS_LOCATION = WidgetLocation.LearningProgressPage;
+const DOCUMENT_BELOW_TITLE_LOCATION = WidgetLocation.DocumentBelowTitle;
 
 type TagMap = Record<PriorityKey, Rem>;
 
@@ -312,6 +313,7 @@ async function onActivate(plugin: ReactRNPlugin) {
       plugin.app.unregisterWidget('vital_daily_floating', WidgetLocation.FloatingWidget),
       plugin.app.unregisterWidget('mobile_launcher', DECK_PAGE_LOCATION),
       plugin.app.unregisterWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION),
+      plugin.app.unregisterWidget('mobile_launcher', DOCUMENT_BELOW_TITLE_LOCATION),
     ].map((operation) => operation.catch(() => undefined)),
   );
 
@@ -327,6 +329,12 @@ async function onActivate(plugin: ReactRNPlugin) {
     dimensions: { width: '100%', height: 'auto' },
   });
   await plugin.app.registerWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION, {
+    dimensions: { width: '100%', height: 'auto' },
+  });
+  // The native mobile Flashcards Home screen does not consistently mount the
+  // learning-progress widget slot. Document pages do mount plugin widgets, so
+  // this gives mobile users a reliable launcher without changing any Rem or card.
+  await plugin.app.registerWidget('mobile_launcher', DOCUMENT_BELOW_TITLE_LOCATION, {
     dimensions: { width: '100%', height: 'auto' },
   });
 
