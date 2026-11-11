@@ -20,7 +20,7 @@ Revisa las tarjetas existentes al arrancar, responde a cambios del editor y comp
 
 ## Computadora y móvil
 
-La versión 1.2.5 ofrece las dos prácticas en computadora y móvil. En el teléfono, al entrar en **Flashcards Home** el plugin abre automáticamente un panel con **Practicar VITAL** y **Practicar IMPORTANTE**. Esta ruta no depende de la barra lateral ni de que la app móvil monte espacios de widgets. Cada popup usa el ancho del teléfono, controles táctiles de al menos 44 px y una zona desplazable para preguntas y respuestas largas. En escritorio conserva un tamaño de 1000 × 720.
+La versión 1.2.6 ofrece las dos prácticas en computadora y móvil. En Android y iOS, el menú `⋯` de cualquier documento muestra **🔥 Practicar VITAL (hasta 35)** y **⭐ Practicar IMPORTANTE (hasta 35)**. Esta ruta usa un toque explícito del usuario y funciona aunque el sistema bloquee la apertura automática del panel en Flashcards Home. Cada popup usa el ancho del teléfono, controles táctiles de al menos 44 px y una zona desplazable para preguntas y respuestas largas. En escritorio conserva un tamaño de 1000 × 720.
 
 En móvil, el plugin sólo lee los tags existentes y abre las colas de práctica. No ejecuta el etiquetado automático, no crea tags y no modifica las tarjetas. En computadora conserva el etiquetado automático ya existente.
 

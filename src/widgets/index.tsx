@@ -1,5 +1,6 @@
 import {
   AppEvents,
+  PluginCommandMenuLocation,
   WidgetLocation,
   renderWidget,
   type PluginRem as Rem,
@@ -27,6 +28,8 @@ const LEGACY_TAG_NAMES = ['Importante', 'Detalle'] as const;
 const DECK_PAGE_LOCATION = WidgetLocation.DeckPage;
 const LEARNING_PROGRESS_LOCATION = WidgetLocation.LearningProgressPage;
 const DOCUMENT_BELOW_TITLE_LOCATION = WidgetLocation.DocumentBelowTitle;
+const MOBILE_VITAL_DOCUMENT_MENU_ID = 'priority-tags.mobile-document-vital';
+const MOBILE_IMPORTANT_DOCUMENT_MENU_ID = 'priority-tags.mobile-document-important';
 
 type TagMap = Record<PriorityKey, Rem>;
 
@@ -327,6 +330,10 @@ async function onActivate(plugin: ReactRNPlugin) {
   );
 
   await plugin.app.unregisterWidget('vital_launcher', WidgetLocation.SidebarEnd);
+  await Promise.all([
+    plugin.app.unregisterMenuItem(MOBILE_VITAL_DOCUMENT_MENU_ID),
+    plugin.app.unregisterMenuItem(MOBILE_IMPORTANT_DOCUMENT_MENU_ID),
+  ].map((operation) => operation.catch(() => undefined)));
 
   await plugin.app.registerWidget('vital_daily_popup', WidgetLocation.Popup, {
     dimensions: popupDimensions(
@@ -366,6 +373,22 @@ async function onActivate(plugin: ReactRNPlugin) {
     };
     plugin.event.addListener(AppEvents.URLChange, undefined, openLauncherOnFlashcardsHome);
     void openLauncherOnFlashcardsHome();
+
+    // Mobile WebViews may reject programmatic popup opening until the user
+    // performs a gesture. The document menu gives Android/iOS a durable,
+    // user-triggered launcher without creating or changing any Rem or card.
+    await plugin.app.registerMenuItem({
+      id: MOBILE_VITAL_DOCUMENT_MENU_ID,
+      name: '🔥 Practicar VITAL (hasta 35)',
+      location: PluginCommandMenuLocation.DocumentMenu,
+      action: async () => { await openDailyStudy(plugin, 'vital'); },
+    });
+    await plugin.app.registerMenuItem({
+      id: MOBILE_IMPORTANT_DOCUMENT_MENU_ID,
+      name: '⭐ Practicar IMPORTANTE (hasta 35)',
+      location: PluginCommandMenuLocation.DocumentMenu,
+      action: async () => { await openDailyStudy(plugin, 'important'); },
+    });
   }
 
   await plugin.app.registerSidebarButton({
@@ -451,6 +474,10 @@ async function onDeactivate(plugin: ReactRNPlugin) {
   plugin.event.removeListener(AppEvents.GlobalRemChanged, undefined);
   plugin.event.removeListener(AppEvents.EditorTextEdited, undefined);
   plugin.event.removeListener(AppEvents.URLChange, undefined);
+  await Promise.all([
+    plugin.app.unregisterMenuItem(MOBILE_VITAL_DOCUMENT_MENU_ID),
+    plugin.app.unregisterMenuItem(MOBILE_IMPORTANT_DOCUMENT_MENU_ID),
+  ].map((operation) => operation.catch(() => undefined)));
   pendingRemIds.clear();
   cachedTags = undefined;
   cachedLegacyTagIds = undefined;
