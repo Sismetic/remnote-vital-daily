@@ -14,7 +14,11 @@ import {
   richTextToPlainText,
 } from '../priority_tags';
 import { openDailyStudy } from './vital_daily';
-import { popupDimensions, shouldReconcilePriorityTags } from '../mobile_layout';
+import {
+  isFlashcardsHomeURL,
+  isMobileRuntime,
+  popupDimensions,
+} from '../mobile_layout';
 
 const INITIAL_BACKFILL_KEY = 'priority-tags.initial-backfill-v5';
 const EVENT_DEBOUNCE_MS = 700;
@@ -31,6 +35,7 @@ let cachedLegacyTagIds: Set<string> | undefined;
 let scanPromise: Promise<ScanResult> | undefined;
 let eventTimer: ReturnType<typeof setTimeout> | undefined;
 let periodicScan: ReturnType<typeof setInterval> | undefined;
+let launcherOpenedForCurrentFlashcardsVisit = false;
 const pendingRemIds = new Set<string>();
 const inFlightRemIds = new Set<string>();
 
@@ -296,10 +301,13 @@ async function scanAllCards(plugin: ReactRNPlugin, announce = true): Promise<Sca
 }
 
 async function onActivate(plugin: ReactRNPlugin) {
-  const reconcilePriorityTags = shouldReconcilePriorityTags(
+  const operatingSystem = await plugin.app.getOperatingSystem().catch(() => undefined);
+  const mobileRuntime = isMobileRuntime(
+    operatingSystem,
     window.screen.width,
     navigator.userAgent,
   );
+  const reconcilePriorityTags = !mobileRuntime;
   // Index is a hidden lifecycle iframe. The visible daily queue belongs only
   // in a popup, never in this widget or a skinny sidebar.
   await Promise.all(
@@ -314,29 +322,51 @@ async function onActivate(plugin: ReactRNPlugin) {
       plugin.app.unregisterWidget('mobile_launcher', DECK_PAGE_LOCATION),
       plugin.app.unregisterWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION),
       plugin.app.unregisterWidget('mobile_launcher', DOCUMENT_BELOW_TITLE_LOCATION),
+      plugin.app.unregisterWidget('mobile_launcher', WidgetLocation.Popup),
     ].map((operation) => operation.catch(() => undefined)),
   );
 
   await plugin.app.unregisterWidget('vital_launcher', WidgetLocation.SidebarEnd);
 
   await plugin.app.registerWidget('vital_daily_popup', WidgetLocation.Popup, {
-    dimensions: popupDimensions(window.screen.width, window.screen.height, navigator.userAgent),
+    dimensions: popupDimensions(
+      window.screen.width, window.screen.height, navigator.userAgent, mobileRuntime,
+    ),
   });
   await plugin.app.registerWidget('important_daily_popup', WidgetLocation.Popup, {
-    dimensions: popupDimensions(window.screen.width, window.screen.height, navigator.userAgent),
+    dimensions: popupDimensions(
+      window.screen.width, window.screen.height, navigator.userAgent, mobileRuntime,
+    ),
   });
-  await plugin.app.registerWidget('mobile_launcher', DECK_PAGE_LOCATION, {
-    dimensions: { width: '100%', height: 'auto' },
-  });
-  await plugin.app.registerWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION, {
-    dimensions: { width: '100%', height: 'auto' },
-  });
-  // The native mobile Flashcards Home screen does not consistently mount the
-  // learning-progress widget slot. Document pages do mount plugin widgets, so
-  // this gives mobile users a reliable launcher without changing any Rem or card.
-  await plugin.app.registerWidget('mobile_launcher', DOCUMENT_BELOW_TITLE_LOCATION, {
-    dimensions: { width: '100%', height: 'auto' },
-  });
+  if (mobileRuntime) {
+    const dimensions = { width: '100%' as const, height: 'auto' as const };
+    await plugin.app.registerWidget('mobile_launcher', DECK_PAGE_LOCATION, { dimensions });
+    await plugin.app.registerWidget('mobile_launcher', LEARNING_PROGRESS_LOCATION, { dimensions });
+    await plugin.app.registerWidget('mobile_launcher', DOCUMENT_BELOW_TITLE_LOCATION, { dimensions });
+    await plugin.app.registerWidget('mobile_launcher', WidgetLocation.Popup, {
+      dimensions: popupDimensions(
+        window.screen.width, window.screen.height, navigator.userAgent, true,
+      ),
+    });
+
+    const openLauncherOnFlashcardsHome = async () => {
+      const url = await plugin.window.getURL().catch(() => '');
+      if (!isFlashcardsHomeURL(url)) {
+        launcherOpenedForCurrentFlashcardsVisit = false;
+        return;
+      }
+      if (launcherOpenedForCurrentFlashcardsVisit) return;
+      launcherOpenedForCurrentFlashcardsVisit = true;
+      try {
+        await plugin.widget.openPopup('mobile_launcher', undefined, false);
+      } catch (error) {
+        launcherOpenedForCurrentFlashcardsVisit = false;
+        console.error('[Priority Tags] Could not open the mobile launcher', error);
+      }
+    };
+    plugin.event.addListener(AppEvents.URLChange, undefined, openLauncherOnFlashcardsHome);
+    void openLauncherOnFlashcardsHome();
+  }
 
   await plugin.app.registerSidebarButton({
     id: 'priority-tags.vital-daily',
@@ -420,9 +450,11 @@ async function onDeactivate(plugin: ReactRNPlugin) {
   if (periodicScan) clearInterval(periodicScan);
   plugin.event.removeListener(AppEvents.GlobalRemChanged, undefined);
   plugin.event.removeListener(AppEvents.EditorTextEdited, undefined);
+  plugin.event.removeListener(AppEvents.URLChange, undefined);
   pendingRemIds.clear();
   cachedTags = undefined;
   cachedLegacyTagIds = undefined;
+  launcherOpenedForCurrentFlashcardsVisit = false;
 }
 
 function IndexWidget() {

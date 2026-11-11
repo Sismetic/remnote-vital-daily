@@ -89,17 +89,30 @@ test('mobile popup uses the device width, desktop keeps the verified dimensions'
   const source = esbuild.transformSync(fs.readFileSync(path.join(__dirname, '../src/mobile_layout.ts'), 'utf8'), { loader: 'ts', format: 'cjs' }).code;
   const layout = { exports: {} };
   new Function('module', 'exports', source)(layout, layout.exports);
-  const { isMobileDevice, popupDimensions, shouldReconcilePriorityTags } = layout.exports;
+  const {
+    isFlashcardsHomeURL,
+    isMobileDevice,
+    isMobileRuntime,
+    popupDimensions,
+    shouldReconcilePriorityTags,
+  } = layout.exports;
   assert.equal(isMobileDevice(390, 'iPhone'), true);
   assert.equal(isMobileDevice(1024, 'iPad'), true);
   assert.equal(isMobileDevice(1440, 'Macintosh'), false);
   assert.equal(shouldReconcilePriorityTags(390, 'iPhone'), false);
   assert.equal(shouldReconcilePriorityTags(1024, 'iPad'), false);
   assert.equal(shouldReconcilePriorityTags(1440, 'Macintosh'), true);
+  assert.equal(isMobileRuntime('android', 1920, 'RemNote'), true);
+  assert.equal(isMobileRuntime('ios', 1920, 'RemNote'), true);
+  assert.equal(isMobileRuntime('mac', 1440, 'Macintosh'), false);
+  assert.equal(isFlashcardsHomeURL('app://js/flashcards_home'), true);
+  assert.equal(isFlashcardsHomeURL('https://www.remnote.com/flashcards_home/'), true);
+  assert.equal(isFlashcardsHomeURL('app://js/flashcards/abc123'), false);
   assert.deepEqual(popupDimensions(390, 844, 'iPhone'), { width: '100%', height: 720 });
   assert.deepEqual(popupDimensions(360, 640, 'Android'), { width: '100%', height: 540 });
   assert.deepEqual(popupDimensions(1024, 1366, 'iPad'), { width: '100%', height: 720 });
   assert.deepEqual(popupDimensions(1440, 900, 'Macintosh'), { width: 1000, height: 720 });
+  assert.deepEqual(popupDimensions(1920, 1080, 'RemNote', true), { width: '100%', height: 720 });
 });
 console.log(`${tests} daily-plan checks passed; no real cards modified.`);
 
