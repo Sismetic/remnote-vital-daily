@@ -90,21 +90,23 @@ test('mobile popup uses the device width, desktop keeps the verified dimensions'
   const layout = { exports: {} };
   new Function('module', 'exports', source)(layout, layout.exports);
   const {
+    isConfirmedDesktopRuntime,
     isFlashcardsHomeURL,
     isMobileDevice,
     isMobileRuntime,
     popupDimensions,
-    shouldReconcilePriorityTags,
   } = layout.exports;
   assert.equal(isMobileDevice(390, 'iPhone'), true);
   assert.equal(isMobileDevice(1024, 'iPad'), true);
   assert.equal(isMobileDevice(1440, 'Macintosh'), false);
-  assert.equal(shouldReconcilePriorityTags(390, 'iPhone'), false);
-  assert.equal(shouldReconcilePriorityTags(1024, 'iPad'), false);
-  assert.equal(shouldReconcilePriorityTags(1440, 'Macintosh'), true);
   assert.equal(isMobileRuntime('android', 1920, 'RemNote'), true);
   assert.equal(isMobileRuntime('ios', 1920, 'RemNote'), true);
   assert.equal(isMobileRuntime('mac', 1440, 'Macintosh'), false);
+  assert.equal(isConfirmedDesktopRuntime('mac', 1440, 'Macintosh'), true);
+  assert.equal(isConfirmedDesktopRuntime('windows', 1920, 'RemNote'), true);
+  assert.equal(isConfirmedDesktopRuntime('android', 1920, 'RemNote'), false);
+  assert.equal(isConfirmedDesktopRuntime(undefined, 1920, 'RemNote'), false);
+  assert.equal(isConfirmedDesktopRuntime('linux', 1080, 'RemNote', 5, true), false);
   assert.equal(isFlashcardsHomeURL('app://js/flashcards_home'), true);
   assert.equal(isFlashcardsHomeURL('https://www.remnote.com/flashcards_home/'), true);
   assert.equal(isFlashcardsHomeURL('app://js/flashcards/abc123'), false);

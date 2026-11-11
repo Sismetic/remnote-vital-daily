@@ -16,8 +16,8 @@ import {
 } from '../priority_tags';
 import { openDailyStudy } from './vital_daily';
 import {
+  isConfirmedDesktopRuntime,
   isFlashcardsHomeURL,
-  isMobileRuntime,
   popupDimensions,
 } from '../mobile_layout';
 
@@ -305,12 +305,20 @@ async function scanAllCards(plugin: ReactRNPlugin, announce = true): Promise<Sca
 
 async function onActivate(plugin: ReactRNPlugin) {
   const operatingSystem = await plugin.app.getOperatingSystem().catch(() => undefined);
-  const mobileRuntime = isMobileRuntime(
+  const coarsePointer = typeof window.matchMedia === 'function' &&
+    window.matchMedia('(pointer: coarse)').matches;
+  const desktopRuntime = isConfirmedDesktopRuntime(
     operatingSystem,
     window.screen.width,
     navigator.userAgent,
+    navigator.maxTouchPoints,
+    coarsePointer,
   );
-  const reconcilePriorityTags = !mobileRuntime;
+  // Fail closed: automatic tag reconciliation runs only on a positively
+  // identified desktop. Older mobile hosts sometimes return no OS value or a
+  // desktop-like iframe, so unknown runtimes receive launchers but never edits.
+  const mobileRuntime = !desktopRuntime;
+  const reconcilePriorityTags = desktopRuntime;
   // Index is a hidden lifecycle iframe. The visible daily queue belongs only
   // in a popup, never in this widget or a skinny sidebar.
   await Promise.all(
@@ -379,13 +387,13 @@ async function onActivate(plugin: ReactRNPlugin) {
     // user-triggered launcher without creating or changing any Rem or card.
     await plugin.app.registerMenuItem({
       id: MOBILE_VITAL_DOCUMENT_MENU_ID,
-      name: '🔥 Practicar VITAL (hasta 35)',
+      name: '🔥 Practicar VITAL (hasta 35) · v1.2.7',
       location: PluginCommandMenuLocation.DocumentMenu,
       action: async () => { await openDailyStudy(plugin, 'vital'); },
     });
     await plugin.app.registerMenuItem({
       id: MOBILE_IMPORTANT_DOCUMENT_MENU_ID,
-      name: '⭐ Practicar IMPORTANTE (hasta 35)',
+      name: '⭐ Practicar IMPORTANTE (hasta 35) · v1.2.7',
       location: PluginCommandMenuLocation.DocumentMenu,
       action: async () => { await openDailyStudy(plugin, 'important'); },
     });

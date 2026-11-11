@@ -12,6 +12,19 @@ export function isMobileRuntime(
     isMobileDevice(screenWidth, userAgent);
 }
 
+export function isConfirmedDesktopRuntime(
+  operatingSystem: string | undefined,
+  screenWidth: number,
+  userAgent = '',
+  maxTouchPoints = 0,
+  coarsePointer = false,
+): boolean {
+  const desktopOS = operatingSystem === 'mac' ||
+    operatingSystem === 'windows' || operatingSystem === 'linux';
+  return desktopOS && !isMobileDevice(screenWidth, userAgent) &&
+    maxTouchPoints === 0 && !coarsePointer;
+}
+
 export function isFlashcardsHomeURL(url: string): boolean {
   try {
     return new URL(url, 'https://www.remnote.com').pathname.replace(/\/$/, '') ===
@@ -19,10 +32,6 @@ export function isFlashcardsHomeURL(url: string): boolean {
   } catch {
     return false;
   }
-}
-
-export function shouldReconcilePriorityTags(screenWidth: number, userAgent = ''): boolean {
-  return !isMobileDevice(screenWidth, userAgent);
 }
 
 export function popupDimensions(
